@@ -1,7 +1,7 @@
 package com.example.backend.controller;
 
-import com.example.backend.model.apiResponses.dto.requests.route.RouteRequest;
-import com.example.backend.model.apiResponses.dto.responses.route.RouteResponse;
+import com.example.backend.model.dto.requests.route.RouteRequest;
+import com.example.backend.model.dto.responses.route.RouteResponse;
 import com.example.backend.service.RouteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

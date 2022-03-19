@@ -1,14 +1,14 @@
 package com.example.backend.service;
 
 import com.example.backend.api.RouteAPI;
-import com.example.backend.model.apiResponses.apis.route.RouteAPIResponse;
-import com.example.backend.model.apiResponses.dto.requests.route.RouteRequest;
-import com.example.backend.model.apiResponses.dto.responses.route.RouteResponse;
-import com.example.backend.model.apiResponses.dto.shared.Coordinate;
+import com.example.backend.model.apis.route.AlternateRoute;
+import com.example.backend.model.apis.route.RouteAPIResponse;
+import com.example.backend.model.dto.requests.route.RouteRequest;
+import com.example.backend.model.dto.responses.route.RouteResponse;
+import com.example.backend.model.shared.Coordinate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,18 +20,12 @@ public class RouteService {
 
     public RouteResponse getRoute(RouteRequest request) {
         RouteAPIResponse response;
-        try {
-            response = routeAPI.getDirections(request);
-        } catch (IOException e) {
-            return new RouteResponse();
-        }
-        RouteResponse routeResponse = new RouteResponse();
-        routeResponse.setRoute1(createResponseFromShapePoints(response.getRoute().getShape().getShapePoints()));
-        if(response.getRoute().getAlternateRoutes() != null && response.getRoute().getAlternateRoutes().size() > 0 && response.getRoute().getAlternateRoutes().get(0) != null) {
-            routeResponse.setRoute2(createResponseFromShapePoints(response.getRoute().getAlternateRoutes().get(0).getRoute().getShape().getShapePoints()));
-        }
-        if(response.getRoute().getAlternateRoutes() != null && response.getRoute().getAlternateRoutes().size() > 1 && response.getRoute().getAlternateRoutes().get(1) != null) {
-            routeResponse.setRoute3(createResponseFromShapePoints(response.getRoute().getAlternateRoutes().get(1).getRoute().getShape().getShapePoints()));
+        response = routeAPI.getDirections(request);
+        RouteResponse routeResponse = new RouteResponse(createResponseFromShapePoints(response.getRoute().getShape().getShapePoints()));
+        if (response.getRoute().getAlternateRoutes() != null) {
+            for (AlternateRoute alternateRoute : response.getRoute().getAlternateRoutes()) {
+                routeResponse.addRoute(createResponseFromShapePoints(alternateRoute.getRoute().getShape().getShapePoints()));
+            }
         }
         return routeResponse;
     }
