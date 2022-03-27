@@ -8,5 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class WeatherLocationRequest {
-    private String searchTerm;
+    private Double lat;
+    private Double lng;
 }

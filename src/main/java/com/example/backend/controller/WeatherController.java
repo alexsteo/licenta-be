@@ -22,9 +22,9 @@ public class WeatherController {
     public WeatherController() {
     }
 
-    @GetMapping("/{searchTerm}")
-    public WeatherLocationResponse getRouteTo(@PathVariable("searchTerm") String searchTerm) {
-        WeatherLocationRequest request = new WeatherLocationRequest(searchTerm);
+    @GetMapping("/{lat}/{lng}")
+    public WeatherLocationResponse getRouteTo(@PathVariable("lat") Double lat, @PathVariable("lng") Double lng) {
+        WeatherLocationRequest request = new WeatherLocationRequest(lat, lng);
         return weatherService.getCurrentWeather(request);
     }
 }

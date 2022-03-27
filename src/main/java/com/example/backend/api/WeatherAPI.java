@@ -17,8 +17,8 @@ public class WeatherAPI {
         return api.get(urlString, WeatherForecastAPIResponse.class, 46.770439, 23.591423);
     }
 
-    public WeatherCurrentAPIResponse getWeatherCurrentForLocation(WeatherLocationRequest request) {
+    public WeatherCurrentAPIResponse getWeatherCurrentForLocation(Double lat, Double lng) {
         String urlString = "https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=48c84905bdb6497273493f657bf32e20";
-        return api.get(urlString, WeatherCurrentAPIResponse.class, 46.770439, 23.591423);
+        return api.get(urlString, WeatherCurrentAPIResponse.class, lat, lng);
     }
 }

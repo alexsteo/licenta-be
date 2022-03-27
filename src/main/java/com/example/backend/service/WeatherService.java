@@ -14,7 +14,7 @@ public class WeatherService {
     private WeatherAPI weatherAPI;
 
     public WeatherLocationResponse getCurrentWeather(WeatherLocationRequest request) {
-        WeatherCurrentAPIResponse apiResponse = weatherAPI.getWeatherCurrentForLocation(request);
+        WeatherCurrentAPIResponse apiResponse = weatherAPI.getWeatherCurrentForLocation(request.getLat(), request.getLng());
         WeatherLocationResponse response = new WeatherLocationResponse();
         response.setTemperature(apiResponse.getMain().getTemp());
         response.setName(apiResponse.getName());
