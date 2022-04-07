@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class Snow{
+public class Rain {
     @JsonProperty("1h")
     public Double _1h;
 }

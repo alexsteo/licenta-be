@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.api.WeatherAPI;
 import com.example.backend.model.apis.weather.current.WeatherCurrentAPIResponse;
+import com.example.backend.model.apis.weather.forecast.WeatherForecastAPIResponse;
 import com.example.backend.model.dto.requests.weather.WeatherLocationRequest;
 import com.example.backend.model.dto.responses.weather.WeatherLocationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,5 +22,9 @@ public class WeatherService {
         response.setLat(apiResponse.getCoord().getLat());
         response.setLng(apiResponse.getCoord().getLon());
         return response;
+    }
+
+    public WeatherForecastAPIResponse getWeatherForecast(Double lat, Double lng) {
+        return weatherAPI.getWeatherForecastForLocation(new WeatherLocationRequest(lat, lng));
     }
 }

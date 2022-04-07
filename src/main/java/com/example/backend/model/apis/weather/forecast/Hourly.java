@@ -25,4 +25,5 @@ public class Hourly{
     public List<Weather> weather;
     public Double pop;
     public Snow snow;
+    public Rain rain;
 }
