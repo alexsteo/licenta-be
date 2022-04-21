@@ -7,12 +7,14 @@ import com.example.backend.model.apis.route.RouteAPIResponse;
 import com.example.backend.model.csv.CityCsvEntry;
 import com.example.backend.model.db.WeatherData;
 import com.example.backend.model.dto.requests.route.RouteRequest;
-import com.example.backend.model.dto.responses.my.LocationWithWeatherDaily;
-import com.example.backend.model.dto.responses.route.RouteResponse;
+import com.example.backend.model.dto.requests.userReports.UserReportBoundingBoxRequest;
+import com.example.backend.model.dto.responses.my.UserReportForBoundingBoxResponse;
+import com.example.backend.model.dto.responses.route.RouteWithData;
+import com.example.backend.model.dto.responses.route.RouteWithWeatherResponse;
 import com.example.backend.model.shared.Coordinate;
+import com.example.backend.model.shared.LocationAndWeather;
 import com.example.backend.util.DistanceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -30,25 +32,28 @@ public class RouteService {
     @Autowired
     private WeatherDataService weatherDataService;
 
+    @Autowired
+    private UserReportService userReportService;
+
     public static final int KM_TO_M = 1000;
 
     private static final Double THRESHOLD = 0.3;
 
-    public RouteResponse getRoute(RouteRequest request) {
-        RouteResponse routeResponse = new RouteResponse();
-        List<LocationWithWeatherDaily> weatherData = new ArrayList<>();
-        RouteAPIResponse apiResponse = routeAPI.getDirections(request);
+    public RouteWithWeatherResponse getRoute(RouteRequest request) {
+        RouteWithWeatherResponse routeWithWeatherResponse = new RouteWithWeatherResponse();
+        RouteAPIResponse apiResponse = routeAPI.getLocalDirections(request);
         List<List<CityCsvEntry>> citiesOnRoutes = new ArrayList<>();
+        List<LocationAndWeather> weatherAtLocations = new ArrayList<>();
 
-        addRoutesToResponse(apiResponse, routeResponse);
+        addRoutesToResponse(apiResponse, routeWithWeatherResponse);
 
         // get cities on each route and make a list of those lists
-        Set<CityCsvEntry> set = new HashSet<>();
-        for (Pair<Double, List<Coordinate>> route : routeResponse.getRoutesWithLength()) {
+        for (RouteWithData route : routeWithWeatherResponse.getRouteWithData()) {
             findCitiesOnRoute(route, citiesOnRoutes);
         }
 
-        // combine the lists using a set to exclude dupes
+        // combine the lists using a set to exclude duplicates
+        Set<CityCsvEntry> set = new HashSet<>();
         for (List<CityCsvEntry> onARoute : citiesOnRoutes) {
             set.addAll(onARoute);
         }
@@ -65,48 +70,60 @@ public class RouteService {
 
         //calculate which cities for each route should have the weather checked
         List<CityCsvEntry> checkpoints = new ArrayList<>();
-        for (Pair<Double, List<Coordinate>> routeWithLength : routeResponse.getRoutesWithLength()) {
-            calculateRouteCheckpointsForWeatherCheck(routeWithLength, allCitiesOnRoutes, checkpoints);
+        for (RouteWithData routeWithData : routeWithWeatherResponse.getRouteWithData()) {
+            calculateRouteCheckpointsForWeatherCheck(routeWithData, allCitiesOnRoutes, checkpoints);
         }
 
         //filter duplicates as two routes may have common roads which may result in checkpoints appearing in both
         checkpoints = new ArrayList<>(new HashSet<>(checkpoints));
 
         //check if certain route combinations are not represented and add the biggest city to the checkpoints
-        for(List<CityCsvEntry> entries : routeCombinations.values()) {
+        for (List<CityCsvEntry> entries : routeCombinations.values()) {
             addCheckpointsForUnrepresentedRouteCombinations(entries, checkpoints);
         }
 
         //check the db for weather data about other cities, and add it to the response if found
-        for(CityCsvEntry cityOnRoute: allCitiesOnRoutes) {
-            addDataForCitiesInDb(checkpoints, cityOnRoute, weatherData);
+        for (CityCsvEntry cityOnRoute : allCitiesOnRoutes) {
+            addDataForCitiesInDb(checkpoints, cityOnRoute, routeWithWeatherResponse, weatherAtLocations);
         }
 
         //get weather data for the current checkpoints
-        for(CityCsvEntry checkpoint: checkpoints) {
-            getWeatherDataForCity(checkpoint, weatherData);
+        for (CityCsvEntry checkpoint : checkpoints) {
+            getWeatherDataForCity(checkpoint, routeWithWeatherResponse, weatherAtLocations);
         }
 
-        routeResponse.setWeatherData(weatherData);
-        return routeResponse;
+        //calculate the score for each route and add it to the response
+        calculateScoreForRoutes(routeWithWeatherResponse, weatherAtLocations, citiesOnRoutes);
+
+        List<Coordinate> allCoordinates = new ArrayList<>();
+        for(RouteWithData routeWithData : routeWithWeatherResponse.getRouteWithData()) {
+            allCoordinates.addAll(routeWithData.getRoute());
+        }
+        Double minLat = getMinLatitudeInList(allCoordinates);
+        Double maxLat = getMaxLatitudeInList(allCoordinates);
+        Double maxLng = Collections.max(allCoordinates, (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
+        Double minLng = Collections.min(allCoordinates, (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
+        routeWithWeatherResponse.setUserReports(userReportService.getReportsInBoundingBoxMerged(new UserReportBoundingBoxRequest(minLat, maxLat, minLng, maxLng)));
+
+        return routeWithWeatherResponse;
     }
 
-    private void addRoutesToResponse(RouteAPIResponse apiResponse, RouteResponse routeResponse) {
-        routeResponse.addRoute(apiResponse.getRoute().getDistance(), createResponseFromShapePoints(apiResponse.getRoute().getShape().getShapePoints()));
+    private void addRoutesToResponse(RouteAPIResponse apiResponse, RouteWithWeatherResponse routeWithWeatherResponse) {
+        routeWithWeatherResponse.addRoute(apiResponse.getRoute().getDistance(), createResponseFromShapePoints(apiResponse.getRoute().getShape().getShapePoints()));
         if (apiResponse.getRoute().getAlternateRoutes() != null) {
             for (AlternateRoute alternateRoute : apiResponse.getRoute().getAlternateRoutes()) {
-                routeResponse.addRoute(alternateRoute.getRoute().getDistance(), createResponseFromShapePoints(alternateRoute.getRoute().getShape().getShapePoints()));
+                routeWithWeatherResponse.addRoute(alternateRoute.getRoute().getDistance(), createResponseFromShapePoints(alternateRoute.getRoute().getShape().getShapePoints()));
             }
         }
     }
 
-    private void findCitiesOnRoute(Pair<Double, List<Coordinate>> route, List<List<CityCsvEntry>> citiesOnRoutes) {
-        Double minLat = getMinLatitudeInList(route.getSecond());
-        Double maxLat = getMaxLatitudeInList(route.getSecond());
-        Double maxLng = Collections.max(route.getSecond(), (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
-        Double minLng = Collections.min(route.getSecond(), (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
+    private void findCitiesOnRoute(RouteWithData route, List<List<CityCsvEntry>> citiesOnRoutes) {
+        Double minLat = getMinLatitudeInList(route.getRoute());
+        Double maxLat = getMaxLatitudeInList(route.getRoute());
+        Double maxLng = Collections.max(route.getRoute(), (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
+        Double minLng = Collections.min(route.getRoute(), (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
         List<CityCsvEntry> inBoundingBox = CityCsvService.inBoundingBox(minLat, maxLat, minLng, maxLng);
-        List<CityCsvEntry> onARoute = CityCsvService.onALine(route.getSecond(), inBoundingBox);
+        List<CityCsvEntry> onARoute = CityCsvService.onALine(route.getRoute(), inBoundingBox);
         citiesOnRoutes.add(onARoute);
     }
 
@@ -126,11 +143,11 @@ public class RouteService {
         routeCombinations.put(inRoutes, value);
     }
 
-    private void calculateRouteCheckpointsForWeatherCheck(Pair<Double, List<Coordinate>> routeWithLength, List<CityCsvEntry> allCitiesOnRoutes, List<CityCsvEntry> checkpoints) {
-        double totalDistance = routeWithLength.getFirst();
+    private void calculateRouteCheckpointsForWeatherCheck(RouteWithData routeWithData, List<CityCsvEntry> allCitiesOnRoutes, List<CityCsvEntry> checkpoints) {
+        double totalDistance = routeWithData.getLength();
         double distanceTraveled = 0.0;
         int checkpoint = 1;
-        List<Coordinate> route = routeWithLength.getSecond();
+        List<Coordinate> route = routeWithData.getRoute();
         List<CityCsvEntry> checkpointsInRoute = new ArrayList<>();
         for (int i = 0; i < route.size() - 4; i += 4) {
             List<Coordinate> points = route.subList(i, i + 4);
@@ -158,34 +175,63 @@ public class RouteService {
 
     private void addCheckpointsForUnrepresentedRouteCombinations(List<CityCsvEntry> entries, List<CityCsvEntry> checkpoints) {
         boolean found = false;
-        for(CityCsvEntry entry : entries) {
-            if(checkpoints.contains(entry)) {
+        for (CityCsvEntry entry : entries) {
+            if (checkpoints.contains(entry)) {
                 found = true;
                 break;
             }
         }
-        if(!found) {
+        if (!found) {
             CityCsvEntry biggest = entries.stream().max((o1, o2) -> (int) (o1.getPop() - o2.getPop())).orElse(new CityCsvEntry());
             checkpoints.add(biggest);
         }
     }
 
-    private void addDataForCitiesInDb(List<CityCsvEntry> checkpoints, CityCsvEntry cityOnRoute, List<LocationWithWeatherDaily> weatherData) {
-        if(!checkpoints.contains(cityOnRoute)) {
+    private void addDataForCitiesInDb(List<CityCsvEntry> checkpoints, CityCsvEntry cityOnRoute, RouteWithWeatherResponse routeWithWeatherResponse, List<LocationAndWeather> weatherAtLocations) {
+        if (!checkpoints.contains(cityOnRoute)) {
             List<WeatherData> data = weatherDataService.getWeatherOrDeleteIfOld(cityOnRoute);
-            if(data.size() > 0) {
-                LocationWithWeatherDaily daily = new LocationWithWeatherDaily();
-                daily.setData(data.stream().map(WeatherDataMapper::convertWeatherData).collect(Collectors.toList()));
-                weatherData.add(daily);
+            if (data.size() > 0) {
+                routeWithWeatherResponse.addWeatherData(data.stream().map(WeatherDataMapper::convertWeatherData).collect(Collectors.toList()));
+                LocationAndWeather locationAtWeather = new LocationAndWeather(data, cityOnRoute);
+                weatherAtLocations.add(locationAtWeather);
             }
         }
     }
 
-    private void getWeatherDataForCity(CityCsvEntry city, List<LocationWithWeatherDaily> weatherData) {
+    private void getWeatherDataForCity(CityCsvEntry city, RouteWithWeatherResponse routeWithWeatherResponse, List<LocationAndWeather> weatherAtLocations) {
         List<WeatherData> data = weatherDataService.getWeatherOrDeleteAndGetIfOld(city);
-        LocationWithWeatherDaily daily = new LocationWithWeatherDaily();
-        daily.setData(data.stream().map(WeatherDataMapper::convertWeatherData).collect(Collectors.toList()));
-        weatherData.add(daily);
+        routeWithWeatherResponse.addWeatherData(data.stream().map(WeatherDataMapper::convertWeatherData).collect(Collectors.toList()));
+        LocationAndWeather locationAtWeather = new LocationAndWeather(data, city);
+        weatherAtLocations.add(locationAtWeather);
+    }
+
+    private void calculateScoreForRoutes(RouteWithWeatherResponse routeWithWeatherResponse, List<LocationAndWeather> weatherAtLocations, List<List<CityCsvEntry>> citiesOnRoutes) {
+        for (int i = 0; i < citiesOnRoutes.size(); i++) {
+            List<CityCsvEntry> route = citiesOnRoutes.get(i);
+            List<LocationAndWeather> locationsForRoute = new ArrayList<>();
+            for (CityCsvEntry city : route) {
+                Optional<LocationAndWeather> weatherAtLocation = weatherAtLocations.stream().filter(location -> location.getLocation().equals(city)).findFirst();
+                weatherAtLocation.ifPresent(locationsForRoute::add);
+            }
+            Double totalSnow = 0.0;
+            Double totalRain = 0.0;
+            Double coldHours = 0.0;
+            Integer cloudyHours = 0;
+            for (LocationAndWeather locationAndWeather : locationsForRoute) {
+                totalSnow += locationAndWeather.getWeather().stream().limit(24).map(WeatherData::getSnow).reduce(0.0, Double::sum);
+                totalRain += locationAndWeather.getWeather().stream().limit(24).map(WeatherData::getRain).reduce(0.0, Double::sum);
+                coldHours += locationAndWeather.getWeather().stream().limit(24).map(WeatherData::getTemperature).reduce(0.0, (acc, curr) -> curr < 5 ? acc + 1 : acc);
+                cloudyHours += locationAndWeather.getWeather().stream().limit(24).map(WeatherData::getClouds).reduce(0, (acc, curr) -> curr > 80 ? acc + 1 : acc);
+            }
+
+            totalSnow /= locationsForRoute.size();
+            totalRain /= locationsForRoute.size();
+            coldHours /= locationsForRoute.size();
+            cloudyHours /= locationsForRoute.size();
+
+            Double score = cloudyHours + 20 * coldHours + totalRain + 5 * totalSnow;
+            routeWithWeatherResponse.setRouteScore(i, score);
+        }
     }
 
     //This and next method are here because Collections.max is broken

@@ -1,6 +1,8 @@
 package com.example.backend.controller;
 
 import com.example.backend.model.db.UserReport;
+import com.example.backend.model.dto.requests.userReports.UserReportBoundingBoxRequest;
+import com.example.backend.model.dto.responses.my.UserReportForBoundingBoxResponse;
 import com.example.backend.service.UserReportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,11 @@ public class UserReportController {
     @GetMapping("/")
     public List<UserReport> getAllReports() {
         return userReportService.getAllReports();
+    }
+
+    @PostMapping("/merged")
+    public UserReportForBoundingBoxResponse getInBoundingBoxMerged(@RequestBody UserReportBoundingBoxRequest request) {
+        return userReportService.getReportsInBoundingBoxMerged(request);
     }
 
     @GetMapping("/{id}")

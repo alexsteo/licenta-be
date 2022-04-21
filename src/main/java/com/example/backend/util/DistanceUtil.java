@@ -17,7 +17,7 @@ public class DistanceUtil {
      * @param lng2
      *      longitude of second point
      * @return
-     *      the resulting distance
+     *      the resulting distance in meters
      */
     public static Double calculateDistanceBetweenPoints(Double lat1, Double lat2, Double lng1, Double lng2) {
         Double earthRadius = 6371 * 1000.0;

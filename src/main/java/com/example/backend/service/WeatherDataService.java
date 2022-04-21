@@ -36,6 +36,7 @@ public class WeatherDataService {
                 .stream()
                 .map(hourly -> mapHourlyDataToWeatherData(hourly, location))
                 .filter(data -> data.getTimestamp().toLocalDateTime().getDayOfYear() < LocalDateTime.now().getDayOfYear() + 2)
+                .filter(data -> data.getTimestamp().toLocalDateTime().getHour() != LocalDateTime.now().getHour())
                 .collect(Collectors.toList());
         weatherDataRepository.saveAllAndFlush(weatherData);
         return weatherData.stream().limit(24).collect(Collectors.toList());

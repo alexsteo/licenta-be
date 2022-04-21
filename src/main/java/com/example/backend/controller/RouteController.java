@@ -1,7 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.model.dto.requests.route.RouteRequest;
-import com.example.backend.model.dto.responses.route.RouteResponse;
+import com.example.backend.model.dto.responses.route.RouteWithWeatherResponse;
 import com.example.backend.service.RouteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ public class RouteController {
     }
 
     @GetMapping("/{from}/{to}")
-    public RouteResponse getRouteTo(@PathVariable("from") String from, @PathVariable("to") String to) {
+    public RouteWithWeatherResponse getRouteTo(@PathVariable("from") String from, @PathVariable("to") String to) {
         log.info(from);
         log.info(to);
         RouteRequest request = new RouteRequest(from, to);

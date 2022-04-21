@@ -2,8 +2,6 @@ package com.example.backend.model.dto.responses.my;
 
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
 import java.sql.Timestamp;
 
 @NoArgsConstructor
@@ -13,7 +11,7 @@ import java.sql.Timestamp;
 @Builder
 public class LocationWithWeather {
 
-    private Timestamp timestamp;
+    private Integer plusHours;
     private Double temperature;
     private Integer clouds;
     private Double windSpeed;
