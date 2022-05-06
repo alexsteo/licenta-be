@@ -51,7 +51,7 @@ public class RouteWithWeatherResponse {
     private void initializeArrays() {
         this.weatherData = new ArrayList<>();
         this.routeWithData = new ArrayList<>();
-        for(int i = 0; i < 25; i++) {
+        for(int i = 0; i < 24; i++) {
             weatherData.add(new LocationWithWeatherHourly(i));
         }
     }

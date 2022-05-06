@@ -17,6 +17,8 @@ import java.io.*;
 @SpringBootApplication
 public class BackendApplication {
 
+    public static int weatherCalls = 0;
+
     public static void main(String[] args) throws IOException, CsvException {
         initialize();
         SpringApplication.run(BackendApplication.class, args);

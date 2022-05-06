@@ -8,6 +8,7 @@ import com.example.backend.model.csv.CityCsvEntry;
 import com.example.backend.model.db.WeatherData;
 import com.example.backend.model.dto.requests.route.RouteRequest;
 import com.example.backend.model.dto.requests.userReports.UserReportBoundingBoxRequest;
+import com.example.backend.model.dto.responses.my.LocationWithWeather;
 import com.example.backend.model.dto.responses.my.UserReportForBoundingBoxResponse;
 import com.example.backend.model.dto.responses.route.RouteWithData;
 import com.example.backend.model.dto.responses.route.RouteWithWeatherResponse;
@@ -95,21 +96,17 @@ public class RouteService {
         //calculate the score for each route and add it to the response
         calculateScoreForRoutes(routeWithWeatherResponse, weatherAtLocations, citiesOnRoutes);
 
+        //get all reports in the bounding box of the routes
         List<Coordinate> allCoordinates = new ArrayList<>();
         for(RouteWithData routeWithData : routeWithWeatherResponse.getRouteWithData()) {
             allCoordinates.addAll(routeWithData.getRoute());
         }
-        Double minLat = getMinLatitudeInList(allCoordinates);
-        Double maxLat = getMaxLatitudeInList(allCoordinates);
-        Double maxLng = Collections.max(allCoordinates, (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
-        Double minLng = Collections.min(allCoordinates, (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
-        routeWithWeatherResponse.setUserReports(userReportService.getReportsInBoundingBoxMerged(new UserReportBoundingBoxRequest(minLat, maxLat, minLng, maxLng)));
+        routeWithWeatherResponse.setUserReports(getReportsForRoute(allCoordinates));
 
         return routeWithWeatherResponse;
     }
 
     private void addRoutesToResponse(RouteAPIResponse apiResponse, RouteWithWeatherResponse routeWithWeatherResponse) {
-        routeWithWeatherResponse.addRoute(apiResponse.getRoute().getDistance(), createResponseFromShapePoints(apiResponse.getRoute().getShape().getShapePoints()));
         if (apiResponse.getRoute().getAlternateRoutes() != null) {
             for (AlternateRoute alternateRoute : apiResponse.getRoute().getAlternateRoutes()) {
                 routeWithWeatherResponse.addRoute(alternateRoute.getRoute().getDistance(), createResponseFromShapePoints(alternateRoute.getRoute().getShape().getShapePoints()));
@@ -232,6 +229,14 @@ public class RouteService {
             Double score = cloudyHours + 20 * coldHours + totalRain + 5 * totalSnow;
             routeWithWeatherResponse.setRouteScore(i, score);
         }
+    }
+
+    private UserReportForBoundingBoxResponse getReportsForRoute(List<Coordinate> allCoordinates) {
+        Double minLat = getMinLatitudeInList(allCoordinates);
+        Double maxLat = getMaxLatitudeInList(allCoordinates);
+        Double maxLng = Collections.max(allCoordinates, (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
+        Double minLng = Collections.min(allCoordinates, (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
+        return userReportService.getReportsInBoundingBoxMerged(new UserReportBoundingBoxRequest(minLat, maxLat, minLng, maxLng));
     }
 
     //This and next method are here because Collections.max is broken

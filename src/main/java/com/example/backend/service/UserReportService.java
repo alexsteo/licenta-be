@@ -37,10 +37,13 @@ public class UserReportService {
         reportsInBoundingBox.forEach(report -> {
             boolean found = false;
             for(UserReportResponse alreadyGrouped : grouped) {
-                if(reportsCloseEnough(report, alreadyGrouped) && report.getUserReportType().equals(alreadyGrouped.getUserReportType())){
-                    alreadyGrouped.increment();
-                    found = true;
-                    break;
+                if(reportsCloseEnough(report, alreadyGrouped)) {
+                    UserReportType type = report.getType();
+                    if(type != null){
+                        alreadyGrouped.increment(type);
+                        found = true;
+                        break;
+                    }
                 }
             }
             if(!found) {

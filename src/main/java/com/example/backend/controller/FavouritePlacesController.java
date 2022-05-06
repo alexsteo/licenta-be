@@ -1,7 +1,8 @@
 package com.example.backend.controller;
 
 import com.example.backend.model.db.FavouritePlace;
-import com.example.backend.model.db.UserReport;
+import com.example.backend.model.dto.FavouritePlaceDto;
+import com.example.backend.model.dto.responses.my.FavouriteWeatherEntry;
 import com.example.backend.model.dto.responses.my.FavouritesWeatherResponse;
 import com.example.backend.service.FavouritePlacesService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,22 +21,27 @@ public class FavouritePlacesController {
     private FavouritePlacesService favouritePlacesService;
 
     @GetMapping("/{user}")
-    public List<FavouritePlace> getReportsForUser(@PathVariable("user") String user) {
+    public List<FavouritePlace> getFavouritesForUser(@PathVariable("user") String user) {
         return favouritePlacesService.getForUser(user);
     }
 
     @GetMapping("/weather/{user}")
-    public FavouritesWeatherResponse getReportsForUserWithWeather(@PathVariable("user") String user) {
+    public FavouritesWeatherResponse getFavouritesForUserWithWeather(@PathVariable("user") String user) {
         return favouritePlacesService.getForUserWithWeather(user);
     }
 
     @PostMapping("/insert")
-    public FavouritePlace insertFavouritePlace(@RequestBody FavouritePlace favouritePlace) {
+    public FavouriteWeatherEntry insertFavouritePlace(@RequestBody FavouritePlaceDto favouritePlace) {
         return favouritePlacesService.insert(favouritePlace);
     }
 
     @DeleteMapping("/{id}")
     public void deleteById(@PathVariable("id") Long id) {
         favouritePlacesService.deleteById(id);
+    }
+
+    @DeleteMapping("/city/{city}")
+    public Integer deleteByCoordinates(@PathVariable("city") String city) {
+        return favouritePlacesService.deleteByCity(city);
     }
 }

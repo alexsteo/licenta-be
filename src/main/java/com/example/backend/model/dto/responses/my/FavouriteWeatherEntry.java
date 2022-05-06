@@ -13,4 +13,5 @@ public class FavouriteWeatherEntry {
     private String name;
     private Double lat;
     private Double lng;
+    private String city;
 }

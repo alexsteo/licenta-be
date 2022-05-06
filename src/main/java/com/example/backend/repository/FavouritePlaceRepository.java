@@ -19,4 +19,8 @@ public interface FavouritePlaceRepository extends JpaRepository<FavouritePlace, 
 
     @Query("select f from FavouritePlace f where f.lat between ?1 and ?2 and f.lng between ?3 and ?4 and f.ofUser = ?5")
     List<FavouritePlace> getInBoundingBox(Double minLat, Double maxLat, Double minLng, Double maxLng, String user);
+
+    @Modifying
+    @Query(value = "delete from FavouritePlace f where f.city = ?1")
+    Integer deleteByCity(String city);
 }

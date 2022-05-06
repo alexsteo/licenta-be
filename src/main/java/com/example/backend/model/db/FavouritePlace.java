@@ -29,4 +29,7 @@ public class FavouritePlace {
 
     @Column(name = "lng")
     private Double lng;
+
+    @Column(name = "city")
+    private String city;
 }

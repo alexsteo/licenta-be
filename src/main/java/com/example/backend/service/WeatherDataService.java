@@ -36,7 +36,7 @@ public class WeatherDataService {
                 .stream()
                 .map(hourly -> mapHourlyDataToWeatherData(hourly, location))
                 .filter(data -> data.getTimestamp().toLocalDateTime().getDayOfYear() < LocalDateTime.now().getDayOfYear() + 2)
-                .filter(data -> data.getTimestamp().toLocalDateTime().getHour() != LocalDateTime.now().getHour())
+                .filter(this::isNotCurrentHour)
                 .collect(Collectors.toList());
         weatherDataRepository.saveAllAndFlush(weatherData);
         return weatherData.stream().limit(24).collect(Collectors.toList());
@@ -68,10 +68,18 @@ public class WeatherDataService {
         weatherDataRepository.deleteByDays(Timestamp.from(Instant.now()));
     }
 
+    private boolean isNotCurrentHour(WeatherData data) {
+
+        if (data.getTimestamp().toLocalDateTime().getHour() != LocalDateTime.now().getHour()) {
+            return true;
+        }
+        return data.getTimestamp().toLocalDateTime().getDayOfYear() != LocalDateTime.now().getDayOfYear();
+    }
+
     private WeatherData mapHourlyDataToWeatherData(Hourly hourlyData, CityCsvEntry location) {
         return WeatherData
                 .builder()
-                .timestamp(Timestamp.from(Instant.ofEpochSecond(hourlyData.getDt())))
+                .timestamp(Timestamp.valueOf(Timestamp.from(Instant.ofEpochSecond(hourlyData.getDt())).toLocalDateTime().plusHours(0)))
                 .temperature(hourlyData.getTemp())
                 .clouds(hourlyData.getClouds())
                 .windSpeed(hourlyData.getWind_speed())
