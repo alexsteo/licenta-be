@@ -5,8 +5,8 @@ import lombok.*;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
+@NoArgsConstructor
 public class Weather{
     public Integer id;
     public String main;

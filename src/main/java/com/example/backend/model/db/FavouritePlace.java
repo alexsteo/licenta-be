@@ -1,20 +1,18 @@
 package com.example.backend.model.db;
 
-import com.example.backend.model.shared.UserReportType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
+@AllArgsConstructor
 @Entity
-@Table(name = "favourite_places", schema= "licenta")
+@Table(name = "favourite_places", schema = "licenta")
 public class FavouritePlace {
 
     @Id

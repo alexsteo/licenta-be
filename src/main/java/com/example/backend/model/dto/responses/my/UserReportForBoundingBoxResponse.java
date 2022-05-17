@@ -6,8 +6,8 @@ import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @ToString
 @Builder
 public class UserReportForBoundingBoxResponse {

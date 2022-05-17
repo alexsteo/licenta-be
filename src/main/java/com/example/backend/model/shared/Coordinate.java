@@ -5,8 +5,8 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @ToString
+@AllArgsConstructor
 public class Coordinate {
 
     private Double latitude;

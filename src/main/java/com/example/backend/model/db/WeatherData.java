@@ -9,8 +9,8 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity
 @Builder
+@Entity
 @Table(name = "weather_data", schema= "licenta")
 public class WeatherData {
 

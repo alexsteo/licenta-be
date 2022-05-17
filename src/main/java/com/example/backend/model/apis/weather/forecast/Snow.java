@@ -6,8 +6,8 @@ import lombok.*;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
+@NoArgsConstructor
 public class Snow{
     @JsonProperty("1h")
     public Double _1h;

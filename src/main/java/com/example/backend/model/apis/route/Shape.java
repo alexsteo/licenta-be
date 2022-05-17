@@ -6,8 +6,8 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
+@NoArgsConstructor
 public class Shape{
     public List<Integer> legIndexes;
     public List<Integer> maneuverIndexes;

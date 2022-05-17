@@ -2,11 +2,11 @@ package com.example.backend.model.dto.responses.my;
 
 import lombok.*;
 
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @ToString
 public class FavouriteWeatherEntry {
     private Double temperature;

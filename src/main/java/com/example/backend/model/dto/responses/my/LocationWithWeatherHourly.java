@@ -8,8 +8,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 @Builder
+@Setter
 public class LocationWithWeatherHourly {
     private List<LocationWithWeather> weatherInLocations;
     private Integer plusHours;

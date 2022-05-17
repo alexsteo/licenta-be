@@ -11,8 +11,8 @@ import java.sql.Timestamp;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
 @Setter
+@Getter
 @Entity
 @Table(name = "user_reports", schema= "licenta")
 public class UserReport {

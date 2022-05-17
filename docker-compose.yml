@@ -1,0 +1,6 @@
+version: '3'
+services:
+  tomcat-db-api:
+    image: licenta-backend
+    ports:
+      - "8080:8080"

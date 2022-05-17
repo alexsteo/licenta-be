@@ -2,8 +2,8 @@ package com.example.backend.model.dto.responses.weather;
 
 import lombok.*;
 
-@Getter
 @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString

@@ -6,8 +6,8 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
+@NoArgsConstructor
 public class Route {
     public BoundingBox boundingBox;
     public Double distance;

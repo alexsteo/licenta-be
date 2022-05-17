@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@Setter
 @ToString
+@Setter
 public class RouteWithWeatherResponse {
 
     private List<RouteWithData> routeWithData;

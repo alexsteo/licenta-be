@@ -8,8 +8,8 @@ import java.util.Map;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
+@NoArgsConstructor
 @Builder
 public class UserReportResponse {
     private Double lat;

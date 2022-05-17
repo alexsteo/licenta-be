@@ -7,8 +7,8 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
+@NoArgsConstructor
 public class Hourly{
     public Integer dt;
     public Double temp;

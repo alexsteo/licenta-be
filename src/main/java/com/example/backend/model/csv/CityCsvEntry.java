@@ -7,9 +7,8 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 @ToString
-@EqualsAndHashCode
+@Builder
 public class CityCsvEntry {
     private String country;
     private String city;

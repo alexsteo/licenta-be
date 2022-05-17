@@ -7,8 +7,8 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 @Builder
+@Setter
 public class LocationWithWeather {
 
     private Integer plusHours;

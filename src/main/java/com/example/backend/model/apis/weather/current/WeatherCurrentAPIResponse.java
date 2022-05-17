@@ -6,9 +6,9 @@ import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@AllArgsConstructor
 public class WeatherCurrentAPIResponse {
     public Coord coord;
     public List<Weather> weather;
