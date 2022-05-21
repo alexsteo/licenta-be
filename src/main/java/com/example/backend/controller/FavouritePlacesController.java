@@ -44,4 +44,9 @@ public class FavouritePlacesController {
     public Integer deleteByCoordinates(@PathVariable("city") String city) {
         return favouritePlacesService.deleteByCity(city);
     }
+
+    @DeleteMapping("/city/{city}/{user}")
+    public Integer deleteByCityAndUser(@PathVariable("city") String city, @PathVariable("user") String user) {
+        return favouritePlacesService.deleteByCityAndUser(city, user);
+    }
 }

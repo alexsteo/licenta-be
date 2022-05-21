@@ -23,4 +23,8 @@ public interface FavouritePlaceRepository extends JpaRepository<FavouritePlace, 
     @Modifying
     @Query(value = "delete from FavouritePlace f where f.city = ?1")
     Integer deleteByCity(String city);
+
+    @Modifying
+    @Query(value = "delete from FavouritePlace f where f.city = ?1 and f.ofUser = ?2")
+    Integer deleteByCity(String city, String user);
 }

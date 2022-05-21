@@ -58,4 +58,6 @@ public class FavouritePlacesService {
     }
 
     public Integer deleteByCity(String city) {return favouritePlaceRepository.deleteByCity(city);}
+
+    public Integer deleteByCityAndUser(String city, String user) {return favouritePlaceRepository.deleteByCity(city, user);}
 }
