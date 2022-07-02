@@ -31,7 +31,7 @@ public interface UserReportRepository extends JpaRepository<UserReport, Long> {
 
     @Modifying
     @Query(value = "delete from UserReport u where u.timestamp > ?1")
-    Integer deleteByDays(Timestamp from);
+    Integer deleteByTimestamp(Timestamp from);
 
     @Modifying
     @Query(value = "delete from UserReport u where u.type = ?2 and u.timestamp > ?1")

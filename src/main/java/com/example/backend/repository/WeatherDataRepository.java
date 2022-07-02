@@ -21,8 +21,8 @@ public interface WeatherDataRepository extends JpaRepository<WeatherData, Long> 
     List<WeatherData> getByLocationForFuture(String location, Timestamp current);
 
     @Modifying
-    @Query(value = "delete from WeatherData w where w.timestamp <= :today")
-    Integer deleteByDays(Timestamp today);
+    @Query(value = "delete from WeatherData w where w.timestamp > ?1")
+    Integer deleteByDays(Timestamp older);
 
     @Modifying
     @Query(value = "delete from WeatherData w where w.location = :location")

@@ -15,7 +15,6 @@ public class WeatherAPI {
 
     public WeatherForecastAPIResponse getWeatherForecastForLocation(WeatherLocationRequest request) {
         String urlString = "https://api.openweathermap.org/data/2.5/onecall?lat=%f&lon=%f&appid=48c84905bdb6497273493f657bf32e20&units=metric";
-        BackendApplication.weatherCalls++;
         return api.get(urlString, WeatherForecastAPIResponse.class, request.getLat(), request.getLng());
     }
 

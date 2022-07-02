@@ -2,22 +2,16 @@ package com.example.backend.util;
 
 import com.example.backend.model.shared.Coordinate;
 
-import java.util.List;
-
 public class DistanceUtil {
 
     /**
-     *  Uses Haversine formula to calculate the shortest distance between two points given by their coordinates
-     * @param lat1
-     *      latitude of first point
-     * @param lat2
-     *      latitude of second point
-     * @param lng1
-     *      longitude of first point
-     * @param lng2
-     *      longitude of second point
-     * @return
-     *      the resulting distance in meters
+     * Uses Haversine formula to calculate the shortest distance between two points given by their coordinates
+     *
+     * @param lat1 latitude of first point
+     * @param lat2 latitude of second point
+     * @param lng1 longitude of first point
+     * @param lng2 longitude of second point
+     * @return the resulting distance in meters
      */
     public static Double calculateDistanceBetweenPoints(Double lat1, Double lat2, Double lng1, Double lng2) {
         Double earthRadius = 6371 * 1000.0;

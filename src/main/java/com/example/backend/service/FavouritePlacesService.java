@@ -33,7 +33,7 @@ public class FavouritePlacesService {
         List<FavouritePlace> places = favouritePlaceRepository.getForUser(user);
         List<FavouriteWeatherEntry> entries = places.stream().map(place -> {
             WeatherLocationResponse response = weatherService.getCurrentWeather(new WeatherLocationRequest(place.getLat(), place.getLng()));
-            return FavouriteWeatherEntry.builder().lat(response.getLat()).lng(response.getLng()).temperature(response.getTemperature()).city(place.getCity()).build();
+            return FavouriteWeatherEntry.builder().lat(response.getLat()).lng(response.getLng()).temperature(response.getTemperature()).rain(response.getRain()).snow(response.getSnow()).clouds(response.getClouds()).city(place.getCity()).build();
         }).collect(Collectors.toList());
         return new FavouritesWeatherResponse(entries);
     }
@@ -50,7 +50,7 @@ public class FavouritePlacesService {
         FavouritePlace place = FavouritePlaceMapper.mapDtoToEntity(dto);
         favouritePlaceRepository.saveAndFlush(place);
         WeatherLocationResponse response = weatherService.getCurrentWeather(new WeatherLocationRequest(place.getLat(), place.getLng()));
-        return FavouriteWeatherEntry.builder().name(response.getName()).lat(response.getLat()).lng(response.getLng()).temperature(response.getTemperature()).city(place.getCity()).build();
+        return FavouriteWeatherEntry.builder().lat(response.getLat()).lng(response.getLng()).temperature(response.getTemperature()).rain(response.getRain()).snow(response.getSnow()).clouds(response.getClouds()).city(place.getCity()).build();
     }
 
     public void deleteById(Long id) {

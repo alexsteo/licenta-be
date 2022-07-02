@@ -12,6 +12,7 @@ import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,7 +66,7 @@ public class WeatherDataService {
     }
 
     public void deleteOldData() {
-        weatherDataRepository.deleteByDays(Timestamp.from(Instant.now()));
+        weatherDataRepository.deleteByDays(Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS)));
     }
 
     private boolean isNotCurrentHour(WeatherData data) {

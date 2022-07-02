@@ -19,6 +19,10 @@ public class CityCsvEntry {
 
     @Override
     public int hashCode() {
-        return this.city.hashCode();
+        if(this.city != null) {
+            return this.city.hashCode();
+        } else {
+            return 1;
+        }
     }
 }

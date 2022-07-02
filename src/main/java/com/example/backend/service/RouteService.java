@@ -15,6 +15,7 @@ import com.example.backend.model.dto.responses.route.RouteWithWeatherResponse;
 import com.example.backend.model.shared.Coordinate;
 import com.example.backend.model.shared.LocationAndWeather;
 import com.example.backend.util.DistanceUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class RouteService {
 
     @Autowired
@@ -38,14 +40,17 @@ public class RouteService {
 
     public static final int KM_TO_M = 1000;
 
-    private static final Double THRESHOLD = 0.3;
+    private static final Double THRESHOLD = 0.7;
+
+    private static final Integer CHECKPOINT_COUNT = 12;
 
     public RouteWithWeatherResponse getRoute(RouteRequest request) {
         RouteWithWeatherResponse routeWithWeatherResponse = new RouteWithWeatherResponse();
-        RouteAPIResponse apiResponse = routeAPI.getLocalDirections(request);
+        RouteAPIResponse apiResponse = routeAPI.getDirections(request);
         List<List<CityCsvEntry>> citiesOnRoutes = new ArrayList<>();
         List<LocationAndWeather> weatherAtLocations = new ArrayList<>();
 
+        log.info("got routes");
         addRoutesToResponse(apiResponse, routeWithWeatherResponse);
 
         // get cities on each route and make a list of those lists
@@ -85,14 +90,17 @@ public class RouteService {
 
         //check the db for weather data about other cities, and add it to the response if found
         for (CityCsvEntry cityOnRoute : allCitiesOnRoutes) {
-            addDataForCitiesInDb(checkpoints, cityOnRoute, routeWithWeatherResponse, weatherAtLocations);
+//            addDataForCitiesInDb(checkpoints, cityOnRoute, routeWithWeatherResponse, weatherAtLocations);
         }
+
+        checkpoints = checkpoints.stream().filter(checkpoint -> checkpoint.getCity() != null).collect(Collectors.toList());
 
         //get weather data for the current checkpoints
         for (CityCsvEntry checkpoint : checkpoints) {
-            getWeatherDataForCity(checkpoint, routeWithWeatherResponse, weatherAtLocations);
+//            getWeatherDataForCity(checkpoint, routeWithWeatherResponse, weatherAtLocations);
         }
 
+        log.info("got weather");
         //calculate the score for each route and add it to the response
         calculateScoreForRoutes(routeWithWeatherResponse, weatherAtLocations, citiesOnRoutes);
 
@@ -121,7 +129,7 @@ public class RouteService {
         Double minLng = Collections.min(route.getRoute(), (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
         List<CityCsvEntry> inBoundingBox = CityCsvService.inBoundingBox(minLat, maxLat, minLng, maxLng);
         List<CityCsvEntry> onARoute = CityCsvService.onALine(route.getRoute(), inBoundingBox);
-        citiesOnRoutes.add(onARoute);
+        citiesOnRoutes.add(onARoute); //TODO: add leeway to max min lng lat
     }
 
     private void assignCityToRouteCombination(CityCsvEntry entry, Map<String, List<CityCsvEntry>> routeCombinations, List<List<CityCsvEntry>> citiesOnRoutes) {
@@ -150,11 +158,11 @@ public class RouteService {
             List<Coordinate> points = route.subList(i, i + 4);
             double distance = DistanceUtil.calculateDistanceBetweenPoints(points.get(0).getLatitude(), points.get(3).getLatitude(), points.get(0).getLongitude(), points.get(3).getLongitude()) / 1000;
             distanceTraveled += distance;
-            if (distanceTraveled > totalDistance / 8 * checkpoint) {
+            if (distanceTraveled > totalDistance / CHECKPOINT_COUNT * checkpoint) {
                 CityCsvEntry biggest = new CityCsvEntry();
                 for (Coordinate point : points) {
                     CityCsvEntry city = allCitiesOnRoutes.stream()
-                            .filter(loc -> DistanceUtil.calculateDistanceBetweenPoints(loc.getLat(), point.getLatitude(), loc.getLng(), point.getLongitude()) < THRESHOLD * totalDistance / 8 * KM_TO_M)
+                            .filter(loc -> DistanceUtil.calculateDistanceBetweenPoints(loc.getLat(), point.getLatitude(), loc.getLng(), point.getLongitude()) < THRESHOLD * totalDistance / CHECKPOINT_COUNT * KM_TO_M)
                             .min((o1, o2) -> Double.valueOf(o2.getPop() - o1.getPop()).intValue()).orElse(new CityCsvEntry());
                     if (city.getPop() != null && (biggest.getPop() == null || city.getPop() > biggest.getPop())) {
                         biggest = city;
@@ -162,7 +170,7 @@ public class RouteService {
                 }
                 checkpointsInRoute.add(biggest);
                 checkpoint++;
-                if (checkpoint == 9) {
+                if (checkpoint == CHECKPOINT_COUNT + 1) {
                     break;
                 }
             }
@@ -220,13 +228,16 @@ public class RouteService {
                 coldHours += locationAndWeather.getWeather().stream().limit(24).map(WeatherData::getTemperature).reduce(0.0, (acc, curr) -> curr < 5 ? acc + 1 : acc);
                 cloudyHours += locationAndWeather.getWeather().stream().limit(24).map(WeatherData::getClouds).reduce(0, (acc, curr) -> curr > 80 ? acc + 1 : acc);
             }
-
-            totalSnow /= locationsForRoute.size();
-            totalRain /= locationsForRoute.size();
-            coldHours /= locationsForRoute.size();
-            cloudyHours /= locationsForRoute.size();
-
-            Double score = cloudyHours + 20 * coldHours + totalRain + 5 * totalSnow;
+            Double score;
+            if(!locationsForRoute.isEmpty()) {
+                totalSnow /= locationsForRoute.size();
+                totalRain /= locationsForRoute.size();
+                coldHours /= locationsForRoute.size();
+                cloudyHours /= locationsForRoute.size();
+                score = cloudyHours + 20 * coldHours + totalRain + 5 * totalSnow;
+            } else {
+                score = 0.0;
+            }
             routeWithWeatherResponse.setRouteScore(i, score);
         }
     }
@@ -239,7 +250,7 @@ public class RouteService {
         return userReportService.getReportsInBoundingBoxMerged(new UserReportBoundingBoxRequest(minLat, maxLat, minLng, maxLng));
     }
 
-    //This and next method are here because Collections.max is broken
+    //This and next method are here because Collections.max seems broken
     private Double getMinLatitudeInList(List<Coordinate> route) {
         Double min = 180.0;
         for (Coordinate c : route) {

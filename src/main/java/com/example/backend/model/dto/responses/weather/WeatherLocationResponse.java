@@ -12,4 +12,7 @@ public class WeatherLocationResponse {
     private String name;
     private Double lat;
     private Double lng;
+    private Double rain;
+    private Double snow;
+    private Integer clouds;
 }

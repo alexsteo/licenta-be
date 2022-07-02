@@ -21,6 +21,17 @@ public class WeatherService {
         response.setName(apiResponse.getName());
         response.setLat(apiResponse.getCoord().getLat());
         response.setLng(apiResponse.getCoord().getLon());
+        response.setClouds(apiResponse.getClouds().getAll());
+        if(apiResponse.getRain() != null) {
+            response.setRain(apiResponse.getRain().get_1h());
+        } else {
+            response.setRain(0.0);
+        }
+        if(apiResponse.getSnow() != null) {
+            response.setSnow(apiResponse.getSnow().get_1h());
+        } else {
+            response.setSnow(0.0);
+        }
         return response;
     }
 

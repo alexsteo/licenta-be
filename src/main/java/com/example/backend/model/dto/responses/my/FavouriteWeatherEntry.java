@@ -14,4 +14,7 @@ public class FavouriteWeatherEntry {
     private Double lat;
     private Double lng;
     private String city;
+    private Double rain;
+    private Double snow;
+    private Integer clouds;
 }

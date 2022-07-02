@@ -30,7 +30,7 @@ public class UserReportService {
         Timestamp since = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS));
         List<UserReportResponse> reportsInBoundingBox = userReportRepository
                 .getInBoundingBoxSince(request.getMinLat(), request.getMaxLat(), request.getMinLng(), request.getMaxLng(), since)
-                .stream()
+                .stream() //TODO: make the time since lower
                 .map(UserReportMapper::convertUserReport)
                 .collect(Collectors.toList());
         List<UserReportResponse> grouped = new ArrayList<>();
@@ -99,7 +99,16 @@ public class UserReportService {
     public Boolean deleteByDays(Integer days) {
 
         Timestamp timestamp = Timestamp.from(Instant.now().minus(days, ChronoUnit.DAYS));
-        if(userReportRepository.deleteByDays(timestamp) > 0) {
+        if(userReportRepository.deleteByTimestamp(timestamp) > 0) {
+            return Boolean.TRUE;
+        } else {
+            return Boolean.FALSE;
+        }
+    }
+
+    public Boolean deleteByHours(Integer hours) {
+        Timestamp timestamp = Timestamp.from(Instant.now().minus(hours, ChronoUnit.HOURS));
+        if(userReportRepository.deleteByTimestamp(timestamp) > 0) {
             return Boolean.TRUE;
         } else {
             return Boolean.FALSE;

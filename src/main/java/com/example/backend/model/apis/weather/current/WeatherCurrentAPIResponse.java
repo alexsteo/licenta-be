@@ -23,4 +23,6 @@ public class WeatherCurrentAPIResponse {
     public Integer id;
     public String name;
     public Integer cod;
+    public Snow snow;
+    public Rain rain;
 }

@@ -25,8 +25,7 @@ public class RouteController {
 
     @GetMapping("/{from}/{to}")
     public RouteWithWeatherResponse getRouteTo(@PathVariable("from") String from, @PathVariable("to") String to) {
-        log.info(from);
-        log.info(to);
+        log.info("Route request", from, to);
         RouteRequest request = new RouteRequest(from, to);
         return routeService.getRoute(request);
     }
