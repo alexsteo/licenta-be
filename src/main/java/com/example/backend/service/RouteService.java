@@ -90,14 +90,14 @@ public class RouteService {
 
         //check the db for weather data about other cities, and add it to the response if found
         for (CityCsvEntry cityOnRoute : allCitiesOnRoutes) {
-//            addDataForCitiesInDb(checkpoints, cityOnRoute, routeWithWeatherResponse, weatherAtLocations);
+            addDataForCitiesInDb(checkpoints, cityOnRoute, routeWithWeatherResponse, weatherAtLocations);
         }
 
         checkpoints = checkpoints.stream().filter(checkpoint -> checkpoint.getCity() != null).collect(Collectors.toList());
 
         //get weather data for the current checkpoints
         for (CityCsvEntry checkpoint : checkpoints) {
-//            getWeatherDataForCity(checkpoint, routeWithWeatherResponse, weatherAtLocations);
+            getWeatherDataForCity(checkpoint, routeWithWeatherResponse, weatherAtLocations);
         }
 
         log.info("got weather");
@@ -111,10 +111,12 @@ public class RouteService {
         }
         routeWithWeatherResponse.setUserReports(getReportsForRoute(allCoordinates));
 
+        log.info("job done");
         return routeWithWeatherResponse;
     }
 
     private void addRoutesToResponse(RouteAPIResponse apiResponse, RouteWithWeatherResponse routeWithWeatherResponse) {
+        routeWithWeatherResponse.addRoute(apiResponse.getRoute().getDistance(), createResponseFromShapePoints(apiResponse.getRoute().getShape().getShapePoints()));
         if (apiResponse.getRoute().getAlternateRoutes() != null) {
             for (AlternateRoute alternateRoute : apiResponse.getRoute().getAlternateRoutes()) {
                 routeWithWeatherResponse.addRoute(alternateRoute.getRoute().getDistance(), createResponseFromShapePoints(alternateRoute.getRoute().getShape().getShapePoints()));
@@ -245,8 +247,8 @@ public class RouteService {
     private UserReportForBoundingBoxResponse getReportsForRoute(List<Coordinate> allCoordinates) {
         Double minLat = getMinLatitudeInList(allCoordinates);
         Double maxLat = getMaxLatitudeInList(allCoordinates);
-        Double maxLng = Collections.max(allCoordinates, (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
-        Double minLng = Collections.min(allCoordinates, (left, right) -> (int) (left.getLongitude() - right.getLongitude())).getLongitude();
+        Double maxLng = getMaxLongitudeInList(allCoordinates);
+        Double minLng = getMinLongitudeInList(allCoordinates);
         return userReportService.getReportsInBoundingBoxMerged(new UserReportBoundingBoxRequest(minLat, maxLat, minLng, maxLng));
     }
 
@@ -266,6 +268,26 @@ public class RouteService {
         for (Coordinate c : route) {
             if (c.getLatitude() > max) {
                 max = c.getLatitude();
+            }
+        }
+        return max;
+    }
+
+    private Double getMinLongitudeInList(List<Coordinate> route) {
+        Double min = 180.0;
+        for (Coordinate c : route) {
+            if (c.getLongitude() < min) {
+                min = c.getLongitude();
+            }
+        }
+        return min;
+    }
+
+    private Double getMaxLongitudeInList(List<Coordinate> route) {
+        Double max = -180.0;
+        for (Coordinate c : route) {
+            if (c.getLongitude() > max) {
+                max = c.getLongitude();
             }
         }
         return max;

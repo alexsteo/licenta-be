@@ -2,17 +2,19 @@ package com.example.backend.api;
 
 import com.example.backend.model.apis.route.RouteAPIResponse;
 import com.example.backend.model.dto.requests.route.RouteRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class RouteAPI{
 
     @Autowired
     private API api;
 
     public RouteAPIResponse getDirections(RouteRequest request) {
-        String urlString = "http://www.mapquestapi.com/directions/v2/alternateroutes?key=3Fu1qGMCbaacUIQxy03WCVZAT7Qhvr1f&from=%s&to=%s&maxRoutes=5&timeOverage=100";
+        String urlString = "http://www.mapquestapi.com/directions/v2/alternateroutes?key=3Fu1qGMCbaacUIQxy03WCVZAT7Qhvr1f&from=%s&to=%s&maxRoutes=5&timeOverage=200";
         return api.get(urlString, RouteAPIResponse.class, request.getFrom(), request.getTo());
     }
 
