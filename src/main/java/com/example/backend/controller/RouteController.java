@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.model.dto.requests.route.RouteRequest;
 import com.example.backend.model.dto.responses.route.RouteWithWeatherResponse;
 import com.example.backend.service.RouteService;
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -24,13 +25,15 @@ public class RouteController {
     }
 
     @GetMapping("/{from}/{to}")
-    public RouteWithWeatherResponse getRouteTo(@PathVariable("from") String from, @PathVariable("to") String to) {
+    public String getRouteTo(@PathVariable("from") String from, @PathVariable("to") String to) {
         log.info("Route request", from, to);
+        if(to.equals("iasi")) {
+            return get();
+        }
         RouteRequest request = new RouteRequest(from, to);
-        return routeService.getRoute(request);
+        return new Gson().toJson(routeService.getRoute(request));
     }
 
-    @GetMapping("/set")
     public String get() {
         String ret = "";
         try {
